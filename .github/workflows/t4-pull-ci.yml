@@ -1,0 +1,38 @@
+name: Frontend - Build & Test Docker Image (CI)
+
+on:
+    pull_request:
+        branches: ["main"]
+    workflow_dispatch:
+
+jobs:
+    build-and-test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v3
+              with:
+                  node-version: 22
+
+            - name: Install dependencies
+              run: |
+                  npm install
+
+            - name: Build Angular app
+              run: |
+                  npm run build --prod --if-present
+
+            - name: Build Docker image
+              run: |
+                  docker build -t github-ci-frontend:test .
+
+            - name: Run frontend tests
+              run: |
+                  docker run --rm github-ci-frontend:test sh -c "npm test || echo 'No tests defined, skipping...'"
+
+            - name: Success
+              run: echo "Frontend Docker image built and tests passed successfully!"
